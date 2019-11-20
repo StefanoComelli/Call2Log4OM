@@ -1,6 +1,6 @@
 ; ***************
 ; * Call2Log4OM *
-; * v1.0.0      *
+; * v1.0.2      *
 ; * de IZ3XNJ   *
 ; ***************
 
@@ -14,7 +14,9 @@
 	SetWorkingDir %A_ScriptDir% ; Ensures a consistent starting directory.
 	#Persistent ; only one copy running allowed
 		
-	version := "1.0.0"
+	version := "1.0.2"
+	; setup Icon
+	Gosub, SetupIcon
 
 	; splash
 	SplashTextOn, 200, 75, Call -> Log4OM de IZ3XNJ, Call2Log4OM`nAutomatic callsign to Log4OM`nv%version%`nPlease wait...
@@ -30,7 +32,7 @@
 		ExitApp
 	else
 	{
-		; delay, just to wait LOg4OM is fully loaded
+		; delay, just to wait Log4OM is fully loaded
 		if (flgDelay)
 		{
 			SplashTextOff
@@ -150,7 +152,7 @@ C2L_Config:
 		; click CLR button to clear previous call if necessary
 		ControlClick, CLR, %lblLog4OM%		
 		
-		; send a stringl
+		; send a string
 		SendInput {Raw}XNJ
 		
 		; wait a moment
@@ -161,7 +163,9 @@ C2L_Config:
 		if (clsNNCall = "")
 		{
 			SplashTextOff
-			MsgBox, 8229,  Call -> Log4OM de IZ3XNJ, Log4OM did not answer`, do you wanto to retry?
+			; 8192 + 32 + 5 = 8229
+			; Task Modal + 	Icon Question + Retry/Cancel
+			MsgBox, 8229,  Call -> Log4OM de IZ3XNJ, Log4OM did not answer`, do you wanto to retry?, 30
 			IfMsgBox, Cancel
 			{
 				flgStop := true	
@@ -396,13 +400,12 @@ Control_GetClassNN(hWnd, hCtrl)
 
 }
 
+; +-----------+
+; | SetupIcon |
+; +-----------+
+SetupIcon:
 
-; +---------------+
-; | SetupTrayMenu |
-; +---------------+
-SetupTrayMenu:
-
-	; set tray Icon  & menues
+	; set tray Icon 
 	try
 	{
 		Menu, Tray, Icon, Call2Log4OM.ico
@@ -413,6 +416,15 @@ SetupTrayMenu:
 		SplashTextOff
 		MsgBox, 16, Call -> Log4OM de IZ3XNJ, Error %e% in Tray Icon
 	}
+	
+return
+
+; +---------------+
+; | SetupTrayMenu |
+; +---------------+
+SetupTrayMenu:
+
+	; set tray menues
 
 	Menu, Tray, NoStandard
 	Menu, Tray, Add, Config, C2L_Config
