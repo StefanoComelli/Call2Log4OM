@@ -1,6 +1,6 @@
 ; ***************
 ; * Call2Log4OM *
-; * v1.0.2      *
+; * v1.1.0      *
 ; * de IZ3XNJ   *
 ; ***************
 
@@ -14,7 +14,7 @@
 	SetWorkingDir %A_ScriptDir% ; Ensures a consistent starting directory.
 	#Persistent ; only one copy running allowed
 		
-	version := "1.0.2"
+	version := "1.1.0"
 	; setup Icon
 	Gosub, SetupIcon
 
@@ -36,7 +36,7 @@
 		if (flgDelay)
 		{
 			SplashTextOff
-			MsgBox, 8240, Call -> Log4OM de IZ3XNJ, Waiting for Log4OM`, please click OK when is fully loaded and ready., 60
+			MsgBox, 8240, Call -> Log4OM de IZ3XNJ, Waiting for Log4OM`, please click OK when is fully loaded and ready., %waitTime%
 			SplashTextOn, 200, 75, Call -> Log4OM de IZ3XNJ, Call2Log4OM`nAutomatic callsign to Log4OM`nv%version%`nPlease wait...
 		}
 		
@@ -85,6 +85,8 @@ C2L_Setup:
 	flgClipBoard := false
 	flgNoParam := true
 	flgDelay := false
+	flgV2 := false
+	waitTime := 60
 	
 	; read command line params
 	for n, param in A_Args  
@@ -119,6 +121,12 @@ C2L_Setup:
 			flgClipBoard := true
 		}
 		
+		if (param = "-V2")
+		{
+			flgV2 := true
+			waitTime := 30
+		}
+		
 	} 
 	
 	; if there is no params (excluding -D delay param) ....
@@ -132,8 +140,11 @@ C2L_Setup:
 	}
 	
 	; setup control's name
-	lblLog4OM = Log4OM [User Profile:
-	
+	if (flgV2)
+		lblLog4OM = LOG4OM 2 [Profile:
+	else
+		lblLog4OM = Log4OM [User Profile:
+		
 return
 
 
@@ -149,8 +160,8 @@ C2L_Config:
 		; activates the window  and makes it foremost
 		WinActivate, %lblLog4OM% 
 		
-		; click CLR button to clear previous call if necessary
-		ControlClick, CLR, %lblLog4OM%		
+		; clear previous call if necessary
+		SendInput {ESC}		
 		
 		; send a string
 		SendInput {Raw}XNJ
@@ -175,8 +186,8 @@ C2L_Config:
 		}	
 		else
 		{
-			; click CLR button to clear string from callsign field
-			ControlClick, CLR, %lblLog4OM%		
+			; clear string from callsign field
+			SendInput {ESC}		
 
 			; clsNNTab
 			clsNNTab := GetLog4OmCtrl("QSO Information (F7)")
@@ -244,7 +255,7 @@ C2L_IsAppRunning(bMsg)
 	}
 	
 		; check if Log4OM running
-		IfWinNotExist, Log4OM Communicator
+		IfWinNotExist, %lblLog4OM%
 		{
 			if (bMsg)
 			{
@@ -290,8 +301,8 @@ C2L_Callsign(callsign, source)
 			if (flgTrayTip)
 				TrayTip, Call -> Log4OM, %callsign%, 40, 17
 			
-			; click CLR button to clear previous call
-			ControlClick, CLR, %lblLog4OM% 
+			; clear previous call
+			SendInput {ESC}	
 			
 			; copy clipboard to the Callsign field
 			ControlSetText, %clsNNCall%, %callsign%, %lblLog4OM% 
@@ -363,7 +374,7 @@ GetLog4OmCtrl(txtLbl)
 	hWnd := WinExist(lblLog4OM)
 
 	; retrieve all controls in the main window
-	WinGet, controls, ControlListHwnd, Log4OM [User Profile:
+	WinGet, controls, ControlListHwnd, %lblLog4OM%
 
 	; for each control
 	Loop, Parse, controls, `n
@@ -465,7 +476,7 @@ showHelp:
 	
 	SplashTextOff
 
-	MsgBox, 64,  Call -> Log4OM de IZ3XNJ - v%version%, Params:`n-D : wait for Log4OM loading`n-TT : show calls in tray`n-BM : launch & read calls from BandMaster`n-CC : read calls from BandMaster on Control+Click, else also on Click`n-CL : read calls from Clipboard
+	MsgBox, 64,  Call -> Log4OM de IZ3XNJ - v%version%, Params:`n-V2 : Log4OM v2`n-D : wait for Log4OM loading`n-TT : show calls in tray`n-BM : launch & read calls from BandMaster`n-CC : read calls from BandMaster on Control+Click, else also on Click`n-CL : read calls from Clipboard
 	
 return
 
