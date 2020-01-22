@@ -1,6 +1,6 @@
 ; ***************
 ; * Call2Log4OM *
-; * v1.1.0      *
+; * v1.2.0      *
 ; * de IZ3XNJ   *
 ; ***************
 
@@ -14,7 +14,7 @@
 	SetWorkingDir %A_ScriptDir% ; Ensures a consistent starting directory.
 	#Persistent ; only one copy running allowed
 		
-	version := "1.1.0"
+	version := "1.2.0"
 	; setup Icon
 	Gosub, SetupIcon
 
@@ -36,7 +36,7 @@
 		if (flgDelay)
 		{
 			SplashTextOff
-			MsgBox, 8240, Call -> Log4OM de IZ3XNJ, Waiting for Log4OM`, please click OK when is fully loaded and ready., %waitTime%
+			MsgBox, 8240, Call -> Log4OM de IZ3XNJ - v%version%, Waiting for Log4OM`, please click OK when is fully loaded and ready., %waitTime%
 			SplashTextOn, 200, 75, Call -> Log4OM de IZ3XNJ, Call2Log4OM`nAutomatic callsign to Log4OM`nv%version%`nPlease wait...
 		}
 		
@@ -86,6 +86,7 @@ C2L_Setup:
 	flgNoParam := true
 	flgDelay := false
 	flgV2 := false
+	flgWorkedBefore := false
 	waitTime := 60
 	
 	; read command line params
@@ -127,6 +128,12 @@ C2L_Setup:
 			waitTime := 30
 		}
 		
+		if (param = "-WB")
+		{
+			flgWorkedBefore := true
+			waitTime := 30
+		}
+		
 	} 
 	
 	; if there is no params (excluding -D delay param) ....
@@ -141,10 +148,18 @@ C2L_Setup:
 	
 	; setup control's name
 	if (flgV2)
+	{
 		lblLog4OM = LOG4OM 2 [Profile:
+		lblQso = Worked Before (F10)
+		workedBefore = {F10}
+	}
 	else
+	{
 		lblLog4OM = Log4OM [User Profile:
-		
+		lblQso = QSO Information (F7)
+		workedBefore = {F7}
+	}
+	
 return
 
 
@@ -176,11 +191,11 @@ C2L_Config:
 			SplashTextOff
 			; 8192 + 32 + 5 = 8229
 			; Task Modal + 	Icon Question + Retry/Cancel
-			MsgBox, 8229,  Call -> Log4OM de IZ3XNJ, Log4OM did not answer`, do you wanto to retry?, 30
+			MsgBox, 8229,  Call -> Log4OM de IZ3XNJ - v%version%, Log4OM did not answer`, do you wanto to retry?, 30
 			IfMsgBox, Cancel
 			{
 				flgStop := true	
-				MsgBox, 16, Call -> Log4OM de IZ3XNJ, Call -> Log4OM de IZ3XNJ`nErrore clsNNCall
+				MsgBox, 16, Call -> Log4OM de IZ3XNJ - v%version%, Call -> Log4OM de IZ3XNJ`nErrore clsNNCall
 				ExitApp
 			}
 		}	
@@ -190,11 +205,11 @@ C2L_Config:
 			SendInput {ESC}		
 
 			; clsNNTab
-			clsNNTab := GetLog4OmCtrl("QSO Information (F7)")
+			clsNNTab := GetLog4OmCtrl(lblQso)
 			if (clsNNTab = "")
 			{
 				SplashTextOff
-				MsgBox, 8229,  Call -> Log4OM de IZ3XNJ, Log4OM did not answer`, do you wanto to retry?
+				MsgBox, 8229,  Call -> Log4OM de IZ3XNJ - v%version%, Log4OM did not answer`, do you wanto to retry?
 				IfMsgBox, Cancel
 				{
 					flgStop := true	
@@ -260,7 +275,7 @@ C2L_IsAppRunning(bMsg)
 			if (bMsg)
 			{
 				SplashTextOff
-				MsgBox, 16, Call -> Log4OM de IZ3XNJ, Log4OM not running
+				MsgBox, 16, Call -> Log4OM de IZ3XNJ - v%version%, Log4OM not running
 				return false
 			}
 			else
@@ -308,8 +323,11 @@ C2L_Callsign(callsign, source)
 			ControlSetText, %clsNNCall%, %callsign%, %lblLog4OM% 
 		}
 		
-		; QSO Information tab {F7} -> Push QSO Information Tab
-		ControlSend, %clsNNTab%, {F7}, %lblLog4OM%  
+		if (flgWorkedBefore)
+		{
+			; show if worked before
+			ControlSend, %clsNNTab%, %workedBefore%, %lblLog4OM%  
+		}	
 	}
 
 }
@@ -425,7 +443,7 @@ SetupIcon:
 	{
 		; close splash text
 		SplashTextOff
-		MsgBox, 16, Call -> Log4OM de IZ3XNJ, Error %e% in Tray Icon
+		MsgBox, 16, Call -> Log4OM de IZ3XNJ - v%version%, Error %e% in Tray Icon
 	}
 	
 return
@@ -476,7 +494,7 @@ showHelp:
 	
 	SplashTextOff
 
-	MsgBox, 64,  Call -> Log4OM de IZ3XNJ - v%version%, Params:`n-V2 : Log4OM v2`n-D : wait for Log4OM loading`n-TT : show calls in tray`n-BM : launch & read calls from BandMaster`n-CC : read calls from BandMaster on Control+Click, else also on Click`n-CL : read calls from Clipboard
+	MsgBox, 64,  Call -> Log4OM de IZ3XNJ - v%version%, Params:`n-V2 : Log4OM v2`n-WB : check worked before`n-D : wait for Log4OM loading`n-TT : show calls in tray`n-BM : launch & read calls from BandMaster`n-CC : read calls from BandMaster on Control+Click, else also on Click`n-CL : read calls from Clipboard
 	
 return
 
@@ -512,7 +530,7 @@ StartBandMaster:
 	{
 		; close splash text
 		SplashTextOff
-		MsgBox, 16, Call -> Log4OM de IZ3XNJ, Error %e% in StartBandMaster
+		MsgBox, 16, Call -> Log4OM de IZ3XNJ - v%version%, Error %e% in StartBandMaster
 		flgBandMaster := false
 	}
 
